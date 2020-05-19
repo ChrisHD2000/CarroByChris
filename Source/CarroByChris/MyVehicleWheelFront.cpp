@@ -22,7 +22,7 @@ UMyVehicleWheelFront::UMyVehicleWheelFront() {
 	//Determina cómo oscilan las llantas del vehículo después de una alteración durante su camino
 	SuspensionDampingRatio = 30.5f;
 
-	//Ajustes mientras el carro gira o arrancha
+	//Ajustes mientras el carro gira o arranca
 	LatStiffMaxLoad = 10.3f;
 	LatStiffValue = 50.f;
 	LongStiffValue = 5000.f;
