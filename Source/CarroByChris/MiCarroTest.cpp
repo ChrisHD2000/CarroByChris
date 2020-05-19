@@ -16,6 +16,7 @@
 #include "GameFramework/PlayerController.h"
 #include "Engine/Engine.h"
 #include "SkeletalRenderPublic.h"
+#include "Components/SkinnedMeshComponent.h"
 
 AMiCarroTest::AMiCarroTest() {
 
@@ -32,16 +33,20 @@ AMiCarroTest::AMiCarroTest() {
 		cobertura->SetStaticMesh(MeshAsset.Object);
 		cobertura->SetWorldScale3D(FVector(1.0f));
 	}
-
-	// ponemos el volante
-	
-	UStaticMeshComponent* volante = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mi Volante"));
+	// creación y ubicación del volante 
+	volante = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mi Volante"));
 	volante->SetupAttachment(RootComponent);
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset2(TEXT("/Game/CarroPartes/Volante.Volante"));
+	volante->SetRelativeLocation(FVector(10.f, 0.f, 55.f));
+	volante->SetRelativeRotation(FRotator(-47.681f, 0.f, -90.f));
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset2(TEXT("/Game/CarroPartes/Volante/VolanteOrigen.VolanteOrigen"));
 	if (MeshAsset2.Succeeded()) {
 		volante->SetStaticMesh(MeshAsset2.Object);
 		volante->SetWorldScale3D(FVector(1.0f));
 	}
+	roll = volante->GetRelativeRotation().Roll;
+	pitch = volante->GetRelativeRotation().Pitch;
+	//UE_LOG(LogTemp, Error, TEXT("ROLL ACTUAL: %f"), volante->GetRelativeRotation().Roll);
 
 	//Añadimos el Blueprint de animación
 	static ConstructorHelpers::FClassFinder<UObject> AnimBPClass(TEXT("/Game/CarroPartes/AnimFinal"));
@@ -49,7 +54,7 @@ AMiCarroTest::AMiCarroTest() {
 	GetMesh()->SetAnimInstanceClass(AnimBPClass.Class);
 
 	
-
+	//Creamos el vehículo 4w
 	
 	UWheeledVehicleMovementComponent4W* Vehicle4W = CastChecked<UWheeledVehicleMovementComponent4W>(GetVehicleMovement());
 	check(Vehicle4W->WheelSetups.Num() == 4);
@@ -168,9 +173,11 @@ void AMiCarroTest::SetupPlayerInputComponent(class UInputComponent* PlayerInputC
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AMiCarroTest::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMiCarroTest::MoveRight);
+	PlayerInputComponent->BindAxis("RotateSteeringWheel", this, &AMiCarroTest::RotarVolante);
 	PlayerInputComponent->BindAction("Handbrake", IE_Pressed, this, &AMiCarroTest::OnHandbrakePressed);
-	PlayerInputComponent->BindAction("Handbrake", IE_Released, this, &AMiCarroTest::OnHandbrakeReleased);
-
+	PlayerInputComponent->BindAction("Handbrake", IE_Released, this, &AMiCarroTest::OnHandbrakeReleased);	
+	PlayerInputComponent->BindAction("RetornoVolante", IE_Released, this, &AMiCarroTest::RegresoVolante);
+	
 }
 
 void AMiCarroTest::MoveForward(float Val)
@@ -194,3 +201,31 @@ void AMiCarroTest::OnHandbrakeReleased()
 	GetVehicleMovementComponent()->SetHandbrakeInput(false);
 }
 
+// 
+void AMiCarroTest::RotarVolante(float val) {
+	/*UE_LOG(LogTemp, Warning, 
+		TEXT("ROT ROLL: %f Lim inferior: %f Lim superio: %f"), 
+			volante->GetRelativeRotation().Roll, 
+			roll  - angMax,
+			roll + angMax);*/
+	// Necesitamos que el volante gire tanto como las llantas
+	// en este caso roll es un numero negativo ya que se requirió para que el volante no quede desfasado
+	if (volante->GetRelativeRotation().Roll  > (roll - angMax) &&
+		volante->GetRelativeRotation().Roll  < (roll + angMax)) 
+	{
+			volante->SetRelativeRotation(volante->GetRelativeRotation() + FRotator(0.f, 0.f, 2.5f * val));
+	}
+	else {
+		if (volante->GetRelativeRotation().Roll < (roll - angMax)) {
+			volante->SetRelativeRotation(FRotator(pitch, 0.f, roll + 6.f - angMax));
+		}
+		if (volante->GetRelativeRotation().Roll > (roll + angMax)) {
+			volante->SetRelativeRotation(FRotator(pitch, 0.f, roll - 6.f + angMax));
+		}
+	}
+
+}
+
+void AMiCarroTest::RegresoVolante() {
+	volante->SetRelativeRotation(FRotator(pitch, 0.f, roll));
+}

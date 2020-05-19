@@ -13,7 +13,8 @@ class UPhysicallMaterial;
 class UCameraComponent;
 class USpringArmComponent;
 class UInputComponent;
-
+class UStaticlMeshComponent;
+class USceneComponent;
 UCLASS()
 class CARROBYCHRIS_API AMiCarroTest : public AWheeledVehicle
 {
@@ -24,13 +25,15 @@ public:
 		USpringArmComponent* SpringArm;
 		UPROPERTY(EditAnywhere)
 		UCameraComponent* Camera;
-		
+		UPROPERTY(EditAnywhere)
+		UStaticMeshComponent* volante;
 public: 
 	AMiCarroTest();
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
 	virtual void Tick(float Delta) override;		
 	bool bInReverseGear;
-
+	float angMax = 60.f;
+	float roll, pitch;
 
 protected:
 	virtual void BeginPlay() override;
@@ -40,6 +43,8 @@ public:
 	void MoveRight(float val);
 	void OnHandbrakePressed();
 	void OnHandbrakeReleased();
+	void RotarVolante(float val);
+	void RegresoVolante();
 	/** Returns SpringArm subobject **/
 	FORCEINLINE USpringArmComponent* GetSpringArm() const { return SpringArm; }
 	/** Returns Camera subobject **/
